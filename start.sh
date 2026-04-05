@@ -1,3 +1,5 @@
-#!/bin/bash
-# Start the Flask application with Gunicorn
-gunicorn --bind 0.0.0.0:$PORT app:app --workers 1 --threads 8 --timeout 0
+#!/usr/bin/env bash
+
+pip install --upgrade pip setuptools wheel
+
+gunicorn app:app
