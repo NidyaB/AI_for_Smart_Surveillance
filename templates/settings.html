@@ -1,0 +1,807 @@
+{% extends "base.html" %}
+
+{% block title %}EyeQ - System Settings{% endblock %}
+
+{% block extra_css %}
+<style>
+.settings-layout { display: grid; grid-template-columns: 1fr 300px; gap: 2rem; }
+
+.settings-main { display: flex; flex-direction: column; gap: 2rem; }
+
+.settings-section {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+}
+
+.settings-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.settings-header i { color: var(--accent); font-size: 1.25rem; }
+.settings-header h3 { margin: 0; font-size: 1.2rem; font-weight: 600; }
+
+.setting-group { margin-bottom: 1.5rem; }
+.setting-group:last-child { margin-bottom: 0; }
+
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: rgba(0,0,0,0.2);
+    transition: border-color 0.2s;
+}
+
+.setting-item:hover { border-color: var(--accent); }
+
+.setting-info { flex: 1; }
+.setting-info h4 { margin: 0 0 0.25rem 0; font-size: 1rem; font-weight: 600; }
+.setting-info p { margin: 0; color: var(--text-muted); font-size: 0.9rem; }
+
+.setting-control {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.toggle-switch {
+    position: relative;
+    width: 50px;
+    height: 26px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 13px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.toggle-switch.active { background: var(--accent); }
+
+.toggle-switch::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 22px;
+    height: 22px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.3s;
+}
+
+.toggle-switch.active::after { transform: translateX(24px); }
+
+.select-control {
+    background: rgba(0,0,0,0.2);
+    color: var(--text-main);
+    border: 1px solid var(--border);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    outline: none;
+    cursor: pointer;
+}
+
+.select-control:focus { border-color: var(--accent); }
+
+.btn-save {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-save:hover { background: #0ea5e9; }
+
+.settings-sidebar {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    height: fit-content;
+}
+
+.profile-section {
+    text-align: center;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #2563eb);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: bold;
+    margin: 0 auto 1rem;
+    color: white;
+}
+
+.profile-name { font-size: 1.2rem; font-weight: 600; margin-bottom: 0.25rem; }
+.profile-role { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem; }
+
+.btn-edit-profile {
+    background: rgba(56, 189, 248, 0.1);
+    color: var(--accent);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-edit-profile:hover {
+    background: var(--accent);
+    color: white;
+}
+
+.system-info {
+    margin-top: 1.5rem;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.info-item:last-child { border-bottom: none; }
+
+.info-label { color: var(--text-muted); font-size: 0.9rem; }
+.info-value { font-weight: 600; font-size: 0.9rem; }
+
+@media (max-width: 1024px) {
+    .settings-layout { grid-template-columns: 1fr; }
+    .settings-sidebar { order: -1; }
+}
+
+/* Profile Edit Modal */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    z-index: 1000;
+    animation: fadeIn 0.3s ease;
+}
+
+.modal.show { display: flex; align-items: center; justify-content: center; }
+
+.modal-content {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from { transform: translateY(-50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.close-btn:hover {
+    background: rgba(0,0,0,0.2);
+    color: var(--text-main);
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.form-input {
+    width: 100%;
+    background: rgba(0,0,0,0.2);
+    color: var(--text-main);
+    border: 1px solid var(--border);
+    padding: 0.75rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.form-input:focus { border-color: var(--accent); }
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.btn-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.btn-secondary {
+    background: rgba(0,0,0,0.2);
+    color: var(--text-main);
+    border: 1px solid var(--border);
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex: 1;
+}
+
+.btn-secondary:hover {
+    background: rgba(0,0,0,0.3);
+    border-color: var(--text-muted);
+}
+
+.btn-primary {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    flex: 1;
+}
+
+.btn-primary:hover { background: #0ea5e9; }
+
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--accent);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 1001;
+    animation: slideInRight 0.3s ease;
+    display: none;
+}
+
+@keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+.notification.show { display: block; }
+
+.notification.error { background: #ef4444; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <div class="dashboard-title">
+            <h1>System Settings</h1>
+            <p>Configure your EyeQ preferences and profile</p>
+        </div>
+    </div>
+
+    <div class="settings-layout">
+        <div class="settings-main">
+            <!-- Camera Settings -->
+            <div class="settings-section">
+                <div class="settings-header">
+                    <i class="fa-solid fa-video"></i>
+                    <h3>Camera Settings</h3>
+                </div>
+
+                <div class="setting-group">
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <h4>Auto Detection</h4>
+                            <p>Enable automatic motion and object detection</p>
+                        </div>
+                        <div class="setting-control">
+                            <div class="toggle-switch active" onclick="toggleSetting(this)"></div>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <h4>Recording Quality</h4>
+                            <p>Set video recording resolution and quality</p>
+                        </div>
+                        <div class="setting-control">
+                            <select class="select-control">
+                                <option>720p HD</option>
+                                <option selected>1080p Full HD</option>
+                                <option>4K Ultra HD</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <h4>Motion Sensitivity</h4>
+                            <p>Adjust sensitivity for motion detection alerts</p>
+                        </div>
+                        <div class="setting-control">
+                            <select class="select-control">
+                                <option>Low</option>
+                                <option selected>Medium</option>
+                                <option>High</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notification Settings -->
+            <div class="settings-section">
+                <div class="settings-header">
+                    <i class="fa-solid fa-bell"></i>
+                    <h3>Notifications</h3>
+                </div>
+
+                <div class="setting-group">
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <h4>Email Alerts</h4>
+                            <p>Receive email notifications for security events</p>
+                        </div>
+                        <div class="setting-control">
+                            <div class="toggle-switch active" onclick="toggleSetting(this)"></div>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <h4>Push Notifications</h4>
+                            <p>Get instant notifications on your devices</p>
+                        </div>
+                        <div class="setting-control">
+                            <div class="toggle-switch active" onclick="toggleSetting(this)"></div>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <h4>Alert Sound</h4>
+                            <p>Play sound for critical security alerts</p>
+                        </div>
+                        <div class="setting-control">
+                            <div class="toggle-switch" onclick="toggleSetting(this)"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Settings -->
+            <div class="settings-section">
+                <div class="settings-header">
+                    <i class="fa-solid fa-cog"></i>
+                    <h3>System Configuration</h3>
+                </div>
+
+                <div class="setting-group">
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <h4>Dark Mode</h4>
+                            <p>Enable dark theme for the interface</p>
+                        </div>
+                        <div class="setting-control">
+                            <div class="toggle-switch active" onclick="toggleSetting(this)"></div>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <h4>Auto Backup</h4>
+                            <p>Automatically backup system data and logs</p>
+                        </div>
+                        <div class="setting-control">
+                            <div class="toggle-switch active" onclick="toggleSetting(this)"></div>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <h4>Data Retention</h4>
+                            <p>How long to keep recorded footage and logs</p>
+                        </div>
+                        <div class="setting-control">
+                            <select class="select-control">
+                                <option>7 days</option>
+                                <option selected>30 days</option>
+                                <option>90 days</option>
+                                <option>1 year</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 2rem;">
+                    <button class="btn-save" onclick="saveSettings()">
+                        <i class="fa-solid fa-save"></i> Save Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="settings-sidebar">
+            <div class="profile-section">
+                <div class="profile-avatar">A</div>
+                <div class="profile-name">Administrator</div>
+                <div class="profile-role">System Owner</div>
+                <button class="btn-edit-profile" onclick="editProfile()">
+                    <i class="fa-solid fa-edit"></i> Edit Profile
+                </button>
+            </div>
+
+            <div class="system-info">
+                <div class="info-item">
+                    <span class="info-label">Version</span>
+                    <span class="info-value">2.1.0</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Last Updated</span>
+                    <span class="info-value">2026-04-04</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Cameras</span>
+                    <span class="info-value">4 Active</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Storage Used</span>
+                    <span class="info-value">2.4 GB</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Uptime</span>
+                    <span class="info-value">7d 14h</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Profile Edit Modal -->
+<div id="profileModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Edit Profile</h2>
+            <button class="close-btn" onclick="closeProfileModal()">&times;</button>
+        </div>
+
+        <form id="profileForm">
+            <div class="form-group">
+                <label for="profileName">Full Name</label>
+                <input type="text" id="profileName" class="form-input" value="Administrator" required>
+            </div>
+
+            <div class="form-group">
+                <label for="profileEmail">Email Address</label>
+                <input type="email" id="profileEmail" class="form-input" value="admin@eyeq.com" required>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="profileRole">Role</label>
+                    <input type="text" id="profileRole" class="form-input" value="System Owner" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="profilePhone">Phone</label>
+                    <input type="tel" id="profilePhone" class="form-input" value="+1 (555) 123-4567">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="profileBio">Bio</label>
+                <textarea id="profileBio" class="form-input" rows="3" placeholder="Tell us about yourself...">Security system administrator with 5+ years of experience in surveillance and system management.</textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="currentPassword">Current Password</label>
+                <input type="password" id="currentPassword" class="form-input" placeholder="Enter current password">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="newPassword">New Password</label>
+                    <input type="password" id="newPassword" class="form-input" placeholder="Enter new password">
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" class="form-input" placeholder="Confirm new password">
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button type="button" class="btn-secondary" onclick="closeProfileModal()">Cancel</button>
+                <button type="submit" class="btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Notification -->
+<div id="notification" class="notification"></div>
+    // Settings state management
+    let settings = {
+        autoDetection: true,
+        recordingQuality: '1080p',
+        motionSensitivity: 'medium',
+        emailAlerts: true,
+        pushNotifications: true,
+        alertSound: false,
+        darkMode: true,
+        autoBackup: true,
+        dataRetention: '30'
+    };
+
+    // Profile data
+    let profileData = {
+        name: 'Administrator',
+        email: 'admin@eyeq.com',
+        role: 'System Owner',
+        phone: '+1 (555) 123-4567',
+        bio: 'Security system administrator with 5+ years of experience in surveillance and system management.'
+    };
+
+    // Initialize settings on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        loadSettings();
+        loadProfileData();
+    });
+
+    function loadSettings() {
+        // Load settings from localStorage or backend
+        const savedSettings = localStorage.getItem('eyeqSettings');
+        if (savedSettings) {
+            settings = { ...settings, ...JSON.parse(savedSettings) };
+        }
+
+        // Apply settings to UI
+        document.querySelectorAll('.toggle-switch').forEach((toggle, index) => {
+            const settingKeys = ['autoDetection', 'emailAlerts', 'pushNotifications', 'alertSound', 'darkMode', 'autoBackup'];
+            if (settings[settingKeys[index]]) {
+                toggle.classList.add('active');
+            }
+        });
+
+        // Set select values
+        document.querySelectorAll('.select-control').forEach((select, index) => {
+            const selectKeys = ['recordingQuality', 'motionSensitivity', 'dataRetention'];
+            select.value = settings[selectKeys[index]];
+        });
+    }
+
+    function loadProfileData() {
+        // Load profile from localStorage or backend
+        const savedProfile = localStorage.getItem('eyeqProfile');
+        if (savedProfile) {
+            profileData = { ...profileData, ...JSON.parse(savedProfile) };
+        }
+
+        // Update profile display
+        document.querySelector('.profile-name').textContent = profileData.name;
+        document.querySelector('.profile-role').textContent = profileData.role;
+    }
+
+    function toggleSetting(element) {
+        element.classList.toggle('active');
+        const isActive = element.classList.contains('active');
+
+        // Determine which setting this toggle controls
+        const settingItem = element.closest('.setting-item');
+        const settingTitle = settingItem.querySelector('h4').textContent;
+
+        switch(settingTitle) {
+            case 'Auto Detection':
+                settings.autoDetection = isActive;
+                break;
+            case 'Email Alerts':
+                settings.emailAlerts = isActive;
+                break;
+            case 'Push Notifications':
+                settings.pushNotifications = isActive;
+                break;
+            case 'Alert Sound':
+                settings.alertSound = isActive;
+                break;
+            case 'Dark Mode':
+                settings.darkMode = isActive;
+                break;
+            case 'Auto Backup':
+                settings.autoBackup = isActive;
+                break;
+        }
+
+        // Auto-save settings
+        saveSettingsToStorage();
+        showNotification('Setting updated successfully!', 'success');
+    }
+
+    function saveSettingsToStorage() {
+        localStorage.setItem('eyeqSettings', JSON.stringify(settings));
+    }
+
+    function saveSettings() {
+        // Save all current settings
+        document.querySelectorAll('.select-control').forEach((select, index) => {
+            const selectKeys = ['recordingQuality', 'motionSensitivity', 'dataRetention'];
+            settings[selectKeys[index]] = select.value;
+        });
+
+        saveSettingsToStorage();
+
+        // Send to backend (you would implement this)
+        fetch('/api/settings', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(settings)
+        })
+        .then(response => response.json())
+        .then(data => {
+            showNotification('All settings saved successfully!', 'success');
+        })
+        .catch(error => {
+            console.error('Error saving settings:', error);
+            showNotification('Failed to save settings. Please try again.', 'error');
+        });
+    }
+
+    function editProfile() {
+        // Populate modal with current data
+        document.getElementById('profileName').value = profileData.name;
+        document.getElementById('profileEmail').value = profileData.email;
+        document.getElementById('profileRole').value = profileData.role;
+        document.getElementById('profilePhone').value = profileData.phone;
+        document.getElementById('profileBio').value = profileData.bio;
+
+        // Show modal
+        document.getElementById('profileModal').classList.add('show');
+    }
+
+    function closeProfileModal() {
+        document.getElementById('profileModal').classList.remove('show');
+        // Clear password fields
+        document.getElementById('currentPassword').value = '';
+        document.getElementById('newPassword').value = '';
+        document.getElementById('confirmPassword').value = '';
+    }
+
+    // Handle profile form submission
+    document.getElementById('profileForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const formData = {
+            name: document.getElementById('profileName').value,
+            email: document.getElementById('profileEmail').value,
+            role: document.getElementById('profileRole').value,
+            phone: document.getElementById('profilePhone').value,
+            bio: document.getElementById('profileBio').value
+        };
+
+        // Validate password change if provided
+        const currentPass = document.getElementById('currentPassword').value;
+        const newPass = document.getElementById('newPassword').value;
+        const confirmPass = document.getElementById('confirmPassword').value;
+
+        if (newPass && newPass !== confirmPass) {
+            showNotification('New passwords do not match!', 'error');
+            return;
+        }
+
+        if (newPass && !currentPass) {
+            showNotification('Please enter your current password to change it!', 'error');
+            return;
+        }
+
+        // Update profile data
+        profileData = { ...profileData, ...formData };
+        localStorage.setItem('eyeqProfile', JSON.stringify(profileData));
+
+        // Update display
+        document.querySelector('.profile-name').textContent = profileData.name;
+        document.querySelector('.profile-role').textContent = profileData.role;
+
+        // Send to backend (you would implement this)
+        fetch('/api/profile', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ ...formData, currentPassword: currentPass, newPassword: newPass })
+        })
+        .then(response => response.json())
+        .then(data => {
+            closeProfileModal();
+            showNotification('Profile updated successfully!', 'success');
+        })
+        .catch(error => {
+            console.error('Error updating profile:', error);
+            showNotification('Failed to update profile. Please try again.', 'error');
+        });
+    });
+
+    function showNotification(message, type = 'success') {
+        const notification = document.getElementById('notification');
+        notification.textContent = message;
+        notification.className = `notification ${type === 'error' ? 'error' : ''} show`;
+
+        setTimeout(() => {
+            notification.classList.remove('show');
+        }, 3000);
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('profileModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeProfileModal();
+        }
+    });
+</script>
+{% endblock %}

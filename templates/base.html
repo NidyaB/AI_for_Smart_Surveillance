@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}EyeQ - Premium Security {% endblock %}</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    {% block extra_css %}{% endblock %}
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <i class="fa-solid fa-shield-halved"></i>
+            <h2>EyeQ</h2>
+        </div>
+
+        <div class="nav-menu">
+            <div class="nav-section">
+                <h3>Main Menu</h3>
+                <a href="/dashboard" class="nav-item {% if request.path == '/dashboard' %}active{% endif %}"><i
+                        class="fa-solid fa-border-all"></i> Dashboard</a>
+                <a href="/live" class="nav-item {% if request.path == '/live' %}active{% endif %}"><i
+                        class="fa-solid fa-video"></i> Live Monitoring</a>
+                <a href="/analytics" class="nav-item {% if request.path == '/analytics' %}active{% endif %}"><i
+                        class="fa-solid fa-chart-line"></i> Analytics</a>
+                <a href="/alerts" class="nav-item {% if request.path == '/alerts' %}active{% endif %}"><i
+                        class="fa-solid fa-bell"></i> Alerts & Logs</a>
+            </div>
+
+            <div class="nav-section">
+                <h3>CCTV Locations</h3>
+                <a href="/zone/entrance" class="nav-item {% if 'entrance' in request.path %}active{% endif %}"><i
+                        class="fa-solid fa-door-open"></i> Entrance</a>
+                <a href="/zone/reception" class="nav-item {% if 'reception' in request.path %}active{% endif %}"><i
+                        class="fa-solid fa-chair"></i> Reception Area</a>
+                <a href="/zone/corridor" class="nav-item {% if 'corridor' in request.path %}active{% endif %}"><i
+                        class="fa-solid fa-road"></i> Corridor</a>
+                <a href="/zone/parking" class="nav-item {% if 'parking' in request.path %}active{% endif %}"><i
+                        class="fa-solid fa-car"></i> Parking Area</a>
+            </div>
+
+            <div class="nav-section" style="margin-top: auto;">
+                <h3>System</h3>
+                <a href="/settings" class="nav-item {% if request.path == '/settings' %}active{% endif %}"><i
+                        class="fa-solid fa-gear"></i> Settings</a>
+                <a href="/help" class="nav-item {% if request.path == '/help' %}active{% endif %}"><i
+                        class="fa-solid fa-circle-question"></i> Help Center</a>
+                <a href="/logout" class="nav-item">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <!-- HEADER -->
+        <header class="top-header">
+            <div class="header-left">
+                <button class="menu-toggle" id="menuToggle"><i class="fa-solid fa-bars"></i></button>
+                <div class="search-bar">
+                    <i class="fa-solid fa-magnifying-glass" style="color: var(--text-muted)"></i>
+                    <input type="text" placeholder="Search Camera, ID or Location...">
+                </div>
+            </div>
+
+            <div class="header-right">
+                <div class="datetime" id="datetimeDisplay">Loading time...</div>
+
+                <div class="header-icons">
+                    <div class="header-icon" title="Fullscreen Mode" onclick="toggleFullscreen()"
+                        style="cursor: pointer;"><i class="fa-solid fa-expand"></i></div>
+                    <a href="/alerts" class="header-icon" title="View Alerts">
+                        <i class="fa-solid fa-bell"></i>
+                        <div class="badge-dot" id="headerAlertDot" style="display:none;"></div>
+                    </a>
+                </div>
+
+                <div class="user-profile">
+                    <div class="avatar">A</div>
+                    <div class="user-info">
+                        <p>Administrator</p>
+                        <span>System Owner</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        {% block content %}{% endblock %}
+
+    </main>
+
+    <!-- VANILLA JS SHARED CONFIG -->
+    <script>
+        // --- Date & Time Update ---
+        function updateDateTime() {
+            const now = new Date();
+            const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+            document.getElementById('datetimeDisplay').textContent = now.toLocaleDateString('en-US', options);
+        }
+        setInterval(updateDateTime, 1000);
+        updateDateTime();
+
+        // --- Mobile Sidebar Toggle ---
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+
+        menuToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            sidebar.classList.toggle('active');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth <= 768 && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+                sidebar.classList.remove('active');
+            }
+        });
+
+        // --- Search Functionality ---
+        const searchInput = document.querySelector('.search-bar input');
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase();
+                // Basic search functionality - could be enhanced
+                console.log('Search query:', query);
+                // For now, just log the search - could filter camera cards, etc.
+            });
+        }
+
+        // --- Fullscreen Functionality ---
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log('Error attempting to enable fullscreen:', err);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // --- Status Styling Helper ---
+        function getEventStatusInfo(event) {
+            const ev = event ? event.toUpperCase() : 'UNKNOWN';
+            switch (ev) {
+                case 'INTRUSION': return { className: 'status-INTRUSION', label: 'INTRUSION' };
+                case 'LOITERING': return { className: 'status-LOITERING', label: 'LOITERING' };
+                case 'FALL': return { className: 'status-FALL', label: 'FALL' };
+                case 'FIGHT': return { className: 'status-FIGHT', label: 'FIGHT' };
+                default: return { className: 'status-secure', label: 'SECURE' };
+            }
+        }
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

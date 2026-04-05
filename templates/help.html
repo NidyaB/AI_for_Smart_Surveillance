@@ -1,0 +1,719 @@
+{% extends "base.html" %}
+
+{% block title %}EyeQ - Help Center{% endblock %}
+
+{% block extra_css %}
+<style>
+.help-layout { display: grid; grid-template-columns: 1fr 300px; gap: 2rem; }
+
+.help-main { display: flex; flex-direction: column; gap: 2rem; }
+
+.help-section {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+}
+
+.help-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.help-header i { color: var(--accent); font-size: 1.25rem; }
+.help-header h3 { margin: 0; font-size: 1.2rem; font-weight: 600; }
+
+.faq-item {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+}
+
+.faq-question {
+    background: rgba(0,0,0,0.2);
+    padding: 1rem 1.5rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.2s;
+}
+
+.faq-question:hover { background: rgba(0,0,0,0.3); }
+
+.faq-question h4 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.faq-toggle {
+    color: var(--accent);
+    font-size: 1.2rem;
+    transition: transform 0.2s;
+}
+
+.faq-toggle.rotated { transform: rotate(180deg); }
+
+.faq-answer {
+    padding: 0 1.5rem 1.5rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    display: none;
+}
+
+.faq-answer.show { display: block; }
+
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.action-card {
+    background: rgba(0,0,0,0.2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.action-card:hover {
+    border-color: var(--accent);
+    background: rgba(56, 189, 248, 0.05);
+}
+
+.action-card i {
+    font-size: 2rem;
+    color: var(--accent);
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.action-card h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.action-card p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.help-sidebar {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    height: fit-content;
+}
+
+.contact-section {
+    margin-bottom: 2rem;
+}
+
+.contact-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.contact-item:hover {
+    border-color: var(--accent);
+    background: rgba(56, 189, 248, 0.05);
+}
+
+.contact-item i { color: var(--accent); font-size: 1.2rem; }
+
+.contact-info h4 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.contact-info p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.status-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10b981;
+    margin-left: 0.5rem;
+}
+
+.documentation-links {
+    border-top: 1px solid var(--border);
+    padding-top: 1.5rem;
+}
+
+.doc-link {
+    display: block;
+    padding: 0.75rem;
+    color: var(--text-main);
+    text-decoration: none;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.doc-link:hover {
+    background: rgba(0,0,0,0.2);
+    color: var(--accent);
+}
+
+.doc-link i { margin-right: 0.75rem; }
+
+@media (max-width: 1024px) {
+    .help-layout { grid-template-columns: 1fr; }
+    .help-sidebar { order: -1; }
+}
+
+/* Notification Styles */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--accent);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 1001;
+    animation: slideInRight 0.3s ease;
+    display: none;
+}
+
+@keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+.notification.show { display: block; }
+
+.notification.error { background: #ef4444; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <div class="dashboard-title">
+            <h1>Help Center</h1>
+            <p>Find answers, get support, and learn about EyeQ</p>
+        </div>
+    </div>
+
+    <div class="help-layout">
+        <div class="help-main">
+            <!-- Quick Actions -->
+            <div class="help-section">
+                <div class="help-header">
+                    <i class="fa-solid fa-bolt"></i>
+                    <h3>Quick Actions</h3>
+                </div>
+
+                <div class="quick-actions">
+                    <div class="action-card" onclick="troubleshoot()">
+                        <i class="fa-solid fa-wrench"></i>
+                        <h4>Troubleshoot Issues</h4>
+                        <p>Run diagnostics and fix common problems</p>
+                    </div>
+
+                    <div class="action-card" onclick="viewLogs()">
+                        <i class="fa-solid fa-file-lines"></i>
+                        <h4>View System Logs</h4>
+                        <p>Check recent activity and error messages</p>
+                    </div>
+
+                    <div class="action-card" onclick="systemStatus()">
+                        <i class="fa-solid fa-heartbeat"></i>
+                        <h4>System Health</h4>
+                        <p>Monitor camera and system performance</p>
+                    </div>
+
+                    <div class="action-card" onclick="backupData()">
+                        <i class="fa-solid fa-download"></i>
+                        <h4>Backup Data</h4>
+                        <p>Create a backup of your settings and logs</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Frequently Asked Questions -->
+            <div class="help-section">
+                <div class="help-header">
+                    <i class="fa-solid fa-question-circle"></i>
+                    <h3>Frequently Asked Questions</h3>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        <h4>How do I add a new camera to my system?</h4>
+                        <i class="fa-solid fa-chevron-down faq-toggle"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>To add a new camera:</p>
+                        <ol>
+                            <li>Go to the Dashboard and click "Add Camera"</li>
+                            <li>Enter the camera's RTSP URL or IP address</li>
+                            <li>Configure the camera settings (name, zone, detection sensitivity)</li>
+                            <li>Test the connection and save the configuration</li>
+                        </ol>
+                        <p>The camera will appear in your dashboard within a few seconds.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        <h4>Why aren't my video feeds loading?</h4>
+                        <i class="fa-solid fa-chevron-down faq-toggle"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Common causes for video feed issues:</p>
+                        <ul>
+                            <li><strong>Network connectivity:</strong> Check your internet connection and camera network access</li>
+                            <li><strong>Camera offline:</strong> Verify the camera is powered on and connected</li>
+                            <li><strong>RTSP URL:</strong> Ensure the camera's RTSP stream URL is correct</li>
+                            <li><strong>Firewall:</strong> Make sure ports 554 (RTSP) and 1935 (RTMP) are open</li>
+                        </ul>
+                        <p>Try running the troubleshooting tool or check the system logs for more details.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        <h4>How do I configure motion detection zones?</h4>
+                        <i class="fa-solid fa-chevron-down faq-toggle"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>To configure detection zones:</p>
+                        <ol>
+                            <li>Navigate to the Zones page from the sidebar</li>
+                            <li>Select a camera from the list</li>
+                            <li>Click "Edit Zones" to draw detection areas on the camera feed</li>
+                            <li>Use the drawing tools to define areas where motion should trigger alerts</li>
+                            <li>Save your zone configuration</li>
+                        </ol>
+                        <p>You can create multiple zones per camera with different sensitivity levels.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        <h4>How do I receive alerts on my mobile device?</h4>
+                        <i class="fa-solid fa-chevron-down faq-toggle"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>To enable mobile alerts:</p>
+                        <ol>
+                            <li>Go to Settings > Notifications</li>
+                            <li>Enable "Push Notifications"</li>
+                            <li>Install the EyeQ mobile app on your device</li>
+                            <li>Log in with your account credentials</li>
+                            <li>Configure which types of alerts you want to receive</li>
+                        </ol>
+                        <p>You'll receive instant notifications for motion detection, system alerts, and security events.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        <h4>What should I do if I forget my password?</h4>
+                        <i class="fa-solid fa-chevron-down faq-toggle"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>If you forget your password:</p>
+                        <ol>
+                            <li>Click "Forgot Password" on the login page</li>
+                            <li>Enter your email address associated with the account</li>
+                            <li>Check your email for a password reset link</li>
+                            <li>Follow the link to create a new password</li>
+                        </ol>
+                        <p>If you don't receive the email, check your spam folder or contact support.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="help-sidebar">
+            <div class="contact-section">
+                <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">Contact Support</h3>
+
+                <div class="contact-item" onclick="startChat()">
+                    <i class="fa-solid fa-comments"></i>
+                    <div class="contact-info">
+                        <h4>Live Chat</h4>
+                        <p>Get instant help from our support team</p>
+                    </div>
+                    <span class="status-indicator"></span>
+                </div>
+
+                <div class="contact-item" onclick="sendEmail()">
+                    <i class="fa-solid fa-envelope"></i>
+                    <div class="contact-info">
+                        <h4>Email Support</h4>
+                        <p>support@eyeq.com</p>
+                    </div>
+                </div>
+
+                <div class="contact-item" onclick="callSupport()">
+                    <i class="fa-solid fa-phone"></i>
+                    <div class="contact-info">
+                        <h4>Phone Support</h4>
+                        <p>1-800-EYEQ</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="documentation-links">
+                <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">Documentation</h3>
+
+                <a href="#" class="doc-link" onclick="openDoc('getting-started')">
+                    <i class="fa-solid fa-book"></i> Getting Started Guide
+                </a>
+
+                <a href="#" class="doc-link" onclick="openDoc('camera-setup')">
+                    <i class="fa-solid fa-video"></i> Camera Setup Manual
+                </a>
+
+                <a href="#" class="doc-link" onclick="openDoc('api-reference')">
+                    <i class="fa-solid fa-code"></i> API Reference
+                </a>
+
+                <a href="#" class="doc-link" onclick="openDoc('troubleshooting')">
+                    <i class="fa-solid fa-tools"></i> Troubleshooting Guide
+                </a>
+
+                <a href="#" class="doc-link" onclick="openDoc('release-notes')">
+                    <i class="fa-solid fa-newspaper"></i> Release Notes
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleFAQ(element) {
+        const answer = element.nextElementSibling;
+        const toggle = element.querySelector('.faq-toggle');
+
+        answer.classList.toggle('show');
+        toggle.classList.toggle('rotated');
+    }
+
+    function troubleshoot() {
+        // Show loading state
+        const button = event.target.closest('.action-card');
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><h4>Running Diagnostics...</h4><p>Please wait...</p>';
+
+        // Call troubleshooting API
+        fetch('/api/system/troubleshoot')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showHelpNotification('System diagnostics completed successfully!', 'success');
+
+                    // Show results in a modal or alert
+                    let results = 'System Diagnostics Results:\n\n';
+                    for (const [key, value] of Object.entries(data.diagnostics)) {
+                        results += `${key.replace('_', ' ').toUpperCase()}: ${value}\n`;
+                    }
+                    setTimeout(() => alert(results), 500);
+                } else {
+                    showHelpNotification('Diagnostics failed. Please try again.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Troubleshooting error:', error);
+                showHelpNotification('Failed to run diagnostics. Please check your connection.', 'error');
+            })
+            .finally(() => {
+                // Restore original button
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                }, 1000);
+            });
+    }
+
+    function viewLogs() {
+        window.location.href = '/alerts';
+    }
+
+    function systemStatus() {
+        // Show loading state
+        const button = event.target.closest('.action-card');
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fa-solid fa-heartbeat"></i><h4>Checking Health...</h4><p>Please wait...</p>';
+
+        // Call system health API
+        fetch('/api/system/health')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showHelpNotification('System health check completed!', 'success');
+
+                    // Show results
+                    let results = 'System Health Report:\n\n';
+                    results += `Status: ${data.health.overall_status}\n`;
+                    results += `Cameras: ${data.health.cameras_online}/${data.health.total_cameras} online\n`;
+                    results += `Uptime: ${data.health.uptime}\n`;
+                    results += `Alerts Today: ${data.health.alerts_today}\n`;
+                    results += `Storage Used: ${data.health.storage_used}\n`;
+                    results += `Last Maintenance: ${data.health.last_maintenance}\n`;
+
+                    setTimeout(() => alert(results), 500);
+                } else {
+                    showHelpNotification('Health check failed. Please try again.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Health check error:', error);
+                showHelpNotification('Failed to check system health. Please check your connection.', 'error');
+            })
+            .finally(() => {
+                // Restore original button
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                }, 1000);
+            });
+    }
+
+    function backupData() {
+        // Show loading state
+        const button = event.target.closest('.action-card');
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><h4>Creating Backup...</h4><p>This may take a moment...</p>';
+
+        // Call backup API
+        fetch('/api/system/backup')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showHelpNotification('System backup completed successfully!', 'success');
+                } else {
+                    showHelpNotification('Backup failed. Please try again.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Backup error:', error);
+                showHelpNotification('Failed to create backup. Please check your connection.', 'error');
+            })
+            .finally(() => {
+                // Restore original button
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                }, 2000);
+            });
+    }
+
+    function startChat() {
+        // Simulate connecting to chat
+        showHelpNotification('Connecting to live chat support...', 'success');
+
+        // In a real app, you would initialize a chat widget here
+        // For now, we'll simulate a chat interface
+        setTimeout(() => {
+            const chatResponse = 'Hello! Welcome to EyeQ Support.\n\n' +
+                               'How can we help you today?\n\n' +
+                               '1. Technical issues\n' +
+                               '2. Feature requests\n' +
+                               '3. Account questions\n' +
+                               '4. Other\n\n' +
+                               'Please reply with your question or concern.';
+
+            if (confirm('Live Chat Connected!\n\n' + chatResponse + '\n\nClick OK to continue chatting, Cancel to close.')) {
+                // In a real app, this would open the full chat interface
+                alert('Chat session started. A support representative will be with you shortly.');
+            }
+        }, 2000);
+    }
+
+    function sendEmail() {
+        // Open email client with pre-filled subject
+        const subject = encodeURIComponent('EyeQ Support Request - ' + new Date().toLocaleDateString());
+        const body = encodeURIComponent(
+            'Please describe your issue or question:\n\n' +
+            'System Information:\n' +
+            '- EyeQ Version: 2.1.0\n' +
+            '- Date: ' + new Date().toLocaleString() + '\n' +
+            '- Issue Description:\n\n'
+        );
+
+        window.open(`mailto:support@eyeq.com?subject=${subject}&body=${body}`);
+        showHelpNotification('Email client opened with pre-filled support request.', 'success');
+    }
+
+    function callSupport() {
+        // Open phone dialer
+        window.open('tel:1-800-EYEQ');
+        showHelpNotification('Opening phone dialer to call support.', 'success');
+    }
+
+    function openDoc(docType) {
+        // Map document types to actual help content
+        const docs = {
+            'getting-started': {
+                title: 'Getting Started Guide',
+                content: 'Welcome to EyeQ!\n\n' +
+                        '1. First Time Setup:\n' +
+                        '   - Log in with admin/admin123\n' +
+                        '   - Configure your camera feeds\n' +
+                        '   - Set up detection zones\n\n' +
+                        '2. Basic Navigation:\n' +
+                        '   - Dashboard: Overview of all cameras\n' +
+                        '   - Live: Real-time camera feeds\n' +
+                        '   - Alerts: View security events\n' +
+                        '   - Settings: Configure system preferences\n\n' +
+                        '3. Next Steps:\n' +
+                        '   - Add your camera RTSP URLs\n' +
+                        '   - Configure motion detection\n' +
+                        '   - Set up email notifications'
+            },
+            'camera-setup': {
+                title: 'Camera Setup Manual',
+                content: 'Setting up Cameras in EyeQ:\n\n' +
+                        'Supported Formats:\n' +
+                        '- RTSP streams\n' +
+                        '- HTTP/HTTPS streams\n' +
+                        '- Local camera devices\n\n' +
+                        'Configuration Steps:\n' +
+                        '1. Go to Settings > Camera Settings\n' +
+                        '2. Click "Add Camera"\n' +
+                        '3. Enter camera details:\n' +
+                        '   - Name: Front Door, Back Yard, etc.\n' +
+                        '   - URL: rtsp://camera-ip:554/stream\n' +
+                        '   - Zone: entrance, parking, etc.\n\n' +
+                        'Troubleshooting:\n' +
+                        '- Check network connectivity\n' +
+                        '- Verify RTSP URL format\n' +
+                        '- Ensure camera supports H.264'
+            },
+            'api-reference': {
+                title: 'API Reference',
+                content: 'EyeQ REST API:\n\n' +
+                        'Base URL: http://localhost:5000\n\n' +
+                        'Endpoints:\n' +
+                        'GET  /api/alerts - Get recent alerts\n' +
+                        'GET  /api/logs - Get system logs\n' +
+                        'POST /api/settings - Update settings\n' +
+                        'GET  /api/settings - Get current settings\n' +
+                        'POST /api/profile - Update profile\n' +
+                        'GET  /api/profile - Get profile data\n\n' +
+                        'Authentication: Session-based\n\n' +
+                        'Response Format: JSON'
+            },
+            'troubleshooting': {
+                title: 'Troubleshooting Guide',
+                content: 'Common Issues and Solutions:\n\n' +
+                        '1. Video Not Loading:\n' +
+                        '   - Check camera connectivity\n' +
+                        '   - Verify RTSP URL\n' +
+                        '   - Restart the application\n\n' +
+                        '2. No Motion Detection:\n' +
+                        '   - Enable auto detection in settings\n' +
+                        '   - Adjust motion sensitivity\n' +
+                        '   - Check camera positioning\n\n' +
+                        '3. High CPU Usage:\n' +
+                        '   - Reduce video quality\n' +
+                        '   - Lower frame rate\n' +
+                        '   - Close unused camera feeds\n\n' +
+                        '4. Storage Full:\n' +
+                        '   - Change data retention period\n' +
+                        '   - Clear old recordings\n' +
+                        '   - Enable auto backup'
+            },
+            'release-notes': {
+                title: 'Release Notes - v2.1.0',
+                content: 'EyeQ v2.1.0 - April 2026\n\n' +
+                        'New Features:\n' +
+                        '✓ Enhanced AI detection with YOLO v11\n' +
+                        '✓ Real-time analytics dashboard\n' +
+                        '✓ Advanced filtering options\n' +
+                        '✓ Profile management system\n' +
+                        '✓ Improved responsive design\n\n' +
+                        'Bug Fixes:\n' +
+                        '✓ Fixed video streaming issues\n' +
+                        '✓ Improved zone detection accuracy\n' +
+                        '✓ Enhanced notification system\n' +
+                        '✓ Better error handling\n\n' +
+                        'Known Issues:\n' +
+                        '• Some older cameras may have compatibility issues\n' +
+                        '• Mobile app sync delayed in some regions'
+            }
+        };
+
+        const doc = docs[docType];
+        if (doc) {
+            // Create a modal to display the documentation
+            showDocumentationModal(doc.title, doc.content);
+        } else {
+            showHelpNotification('Documentation not available yet.', 'error');
+        }
+    }
+
+    function showDocumentationModal(title, content) {
+        // Create modal for documentation
+        const modal = document.createElement('div');
+        modal.className = 'modal show';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 700px;">
+                <div class="modal-header">
+                    <h2>${title}</h2>
+                    <button class="close-btn" onclick="this.closest('.modal').remove()">&times;</button>
+                </div>
+                <div style="padding: 1.5rem; line-height: 1.6; white-space: pre-line;">
+                    ${content}
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        // Close modal when clicking outside
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                modal.remove();
+            }
+        });
+    }
+
+    function showHelpNotification(message, type = 'success') {
+        // Create notification element if it doesn't exist
+        let notification = document.getElementById('help-notification');
+        if (!notification) {
+            notification = document.createElement('div');
+            notification.id = 'help-notification';
+            notification.className = 'notification';
+            document.body.appendChild(notification);
+        }
+
+        notification.textContent = message;
+        notification.className = `notification ${type === 'error' ? 'error' : ''} show`;
+
+        setTimeout(() => {
+            notification.classList.remove('show');
+        }, 3000);
+    }
+</script>
+{% endblock %}
